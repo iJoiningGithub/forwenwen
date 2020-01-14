@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="./script/jquery-1.12.4.js"></script>
+    <script>
+        $(document).ready(function(){
+            $("#uploadButton")
+                .click(function () {
+                    var formData = new FormData();
+                    formData.append("file",$(":file")[0].files[0]);
+                    $.ajax({
+                        url:'file/upload', /*接口域名地址*/
+                        type:'post',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success:function(res){
+                            if (res.status == 100) {
+                                getAllFile();
+                            }
+                        }
+                    })
+            });
+
+            function getAllFile() {
+                $("#main_content").empty();
+                $.get("file/getallfile",
+                    function(data){
+                        if (data.status == 100) {
+                            var allfiles = data.data;
+
+                            allfiles.forEach(function (value, index, array) {
+                                var contentRow = $("<div />").appendTo($("#main_content")).css({'margin-top':'5px'});
+                                var fileName = $("<span />").appendTo(contentRow).css({width: '500px', display: 'inline-block'}).text(value.fileUploadName);
+                                    deleteButton = $("<button />").appendTo(contentRow)
+                                        .attr("type", "button")
+                                        .text("删除")
+                                        .click(function () {
+                                            $.get("file/deletefile", {fileId: value.id}, function (data) {
+                                                if (data.status == 100) {
+
+                                                    getAllFile();
+                                                }
+                                            });
+                                        }),
+
+                                    downloadButton = $("<button />").appendTo(contentRow)
+                                        .attr("type", "button")
+                                        .text("下载")
+                                        .click(function () {
+                                            var forDownlad = $("<a />").attr('href', "file/download?fileId=" + value.id);
+                                            forDownlad[0].click();
+                                            //$.get("file/download", {fileId: value.id});
+                                        });
+                            })
+                        }
+                    });
+            }
+            getAllFile();
+        });
+
+    </script>
+</head>
+<body>
+<div>
+    <p><input type="file" name="file"></p>
+    <p><input id="uploadButton" type="button" value="上传"></p>
+</div>
+<hr>
+<div id="main_content">
+
+</div>
+</body>
+</html>
+
